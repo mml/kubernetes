@@ -47,7 +47,7 @@ type PodDisruptionBudgetStatus struct {
 	DesiredHealthy int32 `json:"desiredHealthy"`
 
 	// total number of expected pods
-	ExpectedPods int32 `json:"desiredHealthy"`
+	ExpectedPods int32 `json:"expectedPods"`
 }
 
 // +genclient=true,noMethods=true
