@@ -26,7 +26,7 @@ import (
 // PodDisruptionBudgetSpec is a description of a PodDisruptionBudget.
 type PodDisruptionBudgetSpec struct {
 	// The minimum number of pods that must be available simultaneously.  This
-	// can be either an integer or a string specifying a percentage.
+	// can be either an integer or a string specifying a percentage, e.g. "28%".
 	MinAvailable intstr.IntOrString `json:"minAvailable,omitempty"`
 
 	// Selector is a label query over pods whose evictions are managed by the
