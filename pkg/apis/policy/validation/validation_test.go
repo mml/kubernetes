@@ -19,7 +19,7 @@ package validation
 import (
 	"testing"
 
-	"k8s.io/kubernetes/pkg/apis/disruption"
+	"k8s.io/kubernetes/pkg/apis/policy"
 	"k8s.io/kubernetes/pkg/util/intstr"
 	"k8s.io/kubernetes/pkg/util/validation/field"
 )
@@ -34,7 +34,7 @@ func TestValidatePodDisruptionBudgetSpec(t *testing.T) {
 		intstr.FromInt(100),
 	}
 	for _, c := range successCases {
-		spec := disruption.PodDisruptionBudgetSpec{
+		spec := policy.PodDisruptionBudgetSpec{
 			MinAvailable: c,
 		}
 		errs := ValidatePodDisruptionBudgetSpec(spec, field.NewPath("foo"))
@@ -51,7 +51,7 @@ func TestValidatePodDisruptionBudgetSpec(t *testing.T) {
 		intstr.FromInt(-1),
 	}
 	for _, c := range failureCases {
-		spec := disruption.PodDisruptionBudgetSpec{
+		spec := policy.PodDisruptionBudgetSpec{
 			MinAvailable: c,
 		}
 		errs := ValidatePodDisruptionBudgetSpec(spec, field.NewPath("foo"))

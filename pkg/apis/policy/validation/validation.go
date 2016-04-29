@@ -16,12 +16,12 @@ limitations under the License.
 package validation
 
 import (
-	"k8s.io/kubernetes/pkg/apis/disruption"
 	extensionsvalidation "k8s.io/kubernetes/pkg/apis/extensions/validation"
+	"k8s.io/kubernetes/pkg/apis/policy"
 	"k8s.io/kubernetes/pkg/util/validation/field"
 )
 
-func ValidatePodDisruptionBudgetSpec(spec disruption.PodDisruptionBudgetSpec, fldPath *field.Path) field.ErrorList {
+func ValidatePodDisruptionBudgetSpec(spec policy.PodDisruptionBudgetSpec, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, extensionsvalidation.ValidatePositiveIntOrPercent(spec.MinAvailable, fldPath.Child("minAvailable"))...)
