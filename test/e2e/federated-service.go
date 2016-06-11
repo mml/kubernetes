@@ -203,7 +203,7 @@ func discoverService(f *framework.Framework) {
 				{
 					Name:    "federated-service-discovery-container",
 					Image:   "gcr.io/google_containers/busybox:1.24",
-					Command: []string{"sh", "-c", "nslookup", FederatedServiceName},
+					Command: []string{"nslookup", FederatedServiceName},
 				},
 			},
 			RestartPolicy: api.RestartPolicyNever,
