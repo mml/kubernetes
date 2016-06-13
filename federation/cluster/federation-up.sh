@@ -20,6 +20,7 @@ set -o pipefail
 
 KUBE_ROOT=$(readlink -m $(dirname "${BASH_SOURCE}")/../../)
 
+source "${KUBE_ROOT}/build/util.sh"
 . ${KUBE_ROOT}/federation/cluster/common.sh
 
 tagfile="${KUBE_ROOT}/federation/manifests/federated-image.tag"
