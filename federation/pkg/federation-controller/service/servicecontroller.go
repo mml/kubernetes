@@ -210,11 +210,13 @@ func New(federationClient federation_release_1_3.Interface, dns dnsprovider.Inte
 
 // obj could be an *api.Service, or a DeletionFinalStateUnknown marker item.
 func (s *ServiceController) enqueueService(obj interface{}) {
+	glog.Infof("Enqueue service...")
 	key, err := controller.KeyFunc(obj)
 	if err != nil {
 		glog.Errorf("Couldn't get key for object %+v: %v", obj, err)
 		return
 	}
+	glog.Infof("Enqueue service %q", key)
 	s.queue.Add(key)
 }
 
@@ -272,6 +274,7 @@ func (s *ServiceController) fedServiceWorker() {
 	for {
 		func() {
 			key, quit := s.queue.Get()
+			glog.Infof("Get service %q", key)
 			if quit {
 				return
 			}
@@ -319,6 +322,8 @@ func (s *ServiceController) updateFederationService(key string, cachedService *c
 
 	// handle available clusters one by one
 	var hasErr bool
+	glog.Infof("Updating service %s/%s on %d clusters", service.Namespace, service.Name, len(s.clusterCache.clientMap))
+
 	for clusterName, cache := range s.clusterCache.clientMap {
 		go func(cache *clusterCache, clusterName string) {
 			err = s.processServiceForCluster(cachedService, clusterName, service, cache.clientset)

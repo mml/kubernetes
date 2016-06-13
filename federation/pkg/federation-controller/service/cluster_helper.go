@@ -31,9 +31,10 @@ import (
 	"k8s.io/kubernetes/pkg/util/workqueue"
 	"k8s.io/kubernetes/pkg/watch"
 
+	"reflect"
+
 	"github.com/golang/glog"
 	"k8s.io/kubernetes/federation/pkg/federation-controller/util"
-	"reflect"
 )
 
 type clusterCache struct {
@@ -166,6 +167,7 @@ func (cc *clusterClientCache) delFromClusterSet(obj interface{}) {
 	cc.rwlock.Lock()
 	defer cc.rwlock.Unlock()
 	if ok {
+		glog.Infof("Deleting cluster %q", cluster.Name)
 		delete(cc.clientMap, cluster.Name)
 	} else {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
@@ -192,7 +194,10 @@ func (cc *clusterClientCache) addToClientMap(obj interface{}) {
 	// check status
 	// skip if not ready
 	if pred(*cluster) {
+		glog.Infof("Cluster is ready.  Adding %q", cluster.Name)
 		cc.startClusterLW(cluster, cluster.Name)
+	} else {
+		glog.Infof("Cluster is not ready.  Skipping %q", cluster.Name)
 	}
 }
 
