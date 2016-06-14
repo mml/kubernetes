@@ -134,6 +134,7 @@ var _ = framework.KubeDescribe("Service [Feature:Federation]", func() {
 			clset := release_1_3.NewForConfigOrDie(restclient.AddUserAgent(cfg, UserAgentName))
 			clusterClientSets = append(clusterClientSets, clset)
 		}
+		time.Sleep(60 * time.Second)
 	})
 
 	AfterEach(func() {
