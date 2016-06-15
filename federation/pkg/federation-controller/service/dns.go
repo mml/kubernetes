@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/golang/glog"
 	"k8s.io/kubernetes/federation/pkg/dnsprovider"
 	"k8s.io/kubernetes/federation/pkg/dnsprovider/rrstype"
 )
@@ -302,10 +303,13 @@ func (s *ServiceController) ensureDnsRecords(clusterName string, cachedService *
 		commonPrefix + "." + dnsZoneName,                                         // global level, one up from region level
 		"", // nowhere to go up from global level
 	}
+	glog.Infof("dnsNames %q", dnsNames)
 
 	endpoints := [][]string{zoneEndpoints, regionEndpoints, globalEndpoints}
+	glog.Infof("endpoints %q", endpoints)
 
 	for i, endpoint := range endpoints {
+		glog.Infof("ensureDnsRrsets(%q, %q, %q, %q, %v)", dnsZoneName, dnsNames[i], endpoint, dnsNames[i+1], endpointReachable)
 		if err = s.ensureDnsRrsets(dnsZoneName, dnsNames[i], endpoint, dnsNames[i+1], endpointReachable); err != nil {
 			return err
 		}
