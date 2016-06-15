@@ -269,7 +269,7 @@ func createService(fcs *federation_release_1_3.Clientset, clusterClientSets []*r
 }
 
 func discoverService(f *framework.Framework, name string, exists bool) {
-	command := []string{"nslookup", name}
+	command := []string{"sh", "-c", fmt.Sprintf(`until nslookup "%s"; do sleep 1; done`, name)}
 
 	framework.Logf("Looking for the service with pod command %q", command)
 
@@ -286,7 +286,7 @@ func discoverService(f *framework.Framework, name string, exists bool) {
 					Command: command,
 				},
 			},
-			RestartPolicy: api.RestartPolicyOnFailure,
+			RestartPolicy: api.RestartPolicyNever,
 		},
 	}
 	if exists {
