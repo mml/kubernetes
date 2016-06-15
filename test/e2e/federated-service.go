@@ -286,7 +286,7 @@ func discoverService(f *framework.Framework, name string, exists bool) {
 					Command: command,
 				},
 			},
-			RestartPolicy: api.RestartPolicyNever,
+			RestartPolicy: api.RestartPolicyOnFailure,
 		},
 	}
 	if exists {
