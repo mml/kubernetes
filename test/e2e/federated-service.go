@@ -269,13 +269,14 @@ func createService(fcs *federation_release_1_3.Clientset, clusterClientSets []*r
 }
 
 func discoverService(f *framework.Framework, name string, exists bool) {
+	podname := fmt.Sprintf("%s-%s", FederatedServicePod, name)
 	command := []string{"sh", "-c", fmt.Sprintf(`until nslookup "%s"; do sleep 1; done`, name)}
 
 	framework.Logf("Looking for the service with pod command %q", command)
 
 	pod := &api.Pod{
 		ObjectMeta: api.ObjectMeta{
-			Name:   FederatedServicePod,
+			Name:   podname,
 			Labels: map[string]string{"name": FederatedServicePod},
 		},
 		Spec: api.PodSpec{
