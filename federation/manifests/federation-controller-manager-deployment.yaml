@@ -18,6 +18,7 @@ spec:
         image: {{.FEDERATION_CONTROLLER_MANAGER_IMAGE_REPO}}:{{.FEDERATION_CONTROLLER_MANAGER_IMAGE_TAG}}
         command:
         - /usr/local/bin/federation-controller-manager
+        - --v=4
         - --master=https://{{.FEDERATION_APISERVER_DEPLOYMENT_NAME}}:443
         - --dns-provider={{.FEDERATION_DNS_PROVIDER}}
         - --dns-provider-config={{.FEDERATION_DNS_PROVIDER_CONFIG}}
