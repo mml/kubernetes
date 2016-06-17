@@ -133,8 +133,64 @@ var _ = framework.KubeDescribe("[Feature:Federation] Federated Services", func()
 	})
 
 	Describe("DNS", func() {
+		labels := map[string]string{
+			"foo": "bar",
+		}
+
+		createBackendPods := func(clusterClientSets []*release_1_3.Clientset, namespace string) {
+			name := "backend"
+
+			pod := &v1.Pod{
+				ObjectMeta: v1.ObjectMeta{
+					Name:   name,
+					Labels: labels,
+				},
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:  "federated-service-discovery-container",
+							Image: "gcr.io/google_containers/echoserver:1.4",
+						},
+					},
+					RestartPolicy: v1.RestartPolicyAlways,
+				},
+			}
+
+			for _, client := range clusterClientSets {
+				_, err := client.Core().Pods(namespace).Create(pod)
+				Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("Creating pod %q/%q", namespace, name))
+			}
+		}
+
+		createService := func(fcs *federation_release_1_3.Clientset, clusterClientSets []*release_1_3.Clientset, namespace string) {
+			By(fmt.Sprintf("Creating federated service %q in namespace %q", FederatedServiceName, namespace))
+
+			service := &v1.Service{
+				ObjectMeta: v1.ObjectMeta{
+					Name: FederatedServiceName,
+				},
+				Spec: v1.ServiceSpec{
+					Selector: labels,
+					Type:     "LoadBalancer",
+					Ports: []v1.ServicePort{
+						{
+							Name:       "http",
+							Port:       80,
+							TargetPort: intstr.FromInt(8080),
+						},
+					},
+				},
+			}
+			nservice, err := fcs.Core().Services(namespace).Create(service)
+			framework.Logf("Trying to create service %q in namespace %q", service.ObjectMeta.Name, service.ObjectMeta.Namespace)
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("creating service %s: %+v", service.Name, err))
+			for _, cs := range clusterClientSets {
+				waitForFederatedServiceShard(cs, namespace, nservice, 1)
+			}
+		}
 		BeforeEach(func() {
 			framework.SkipUnlessFederated(f.Client)
+			createBackendPods(clusterClientSets, f.Namespace.Name)
 			createService(f.FederationClientset_1_3, clusterClientSets, f.Namespace.Name)
 		})
 
@@ -223,10 +279,6 @@ func waitForFederatedServiceShard(cs *release_1_3.Clientset, namespace string, s
 		// Renaming for clarity/readability
 		clSvc := clSvcList.Items[0]
 
-		// The federation service has no cluster IP.  Clear any cluster IP before
-		// comparison.
-		clSvc.Spec.ClusterIP = ""
-
 		Expect(clSvc.Name).To(Equal(service.Name))
 		// Some fields are expected to be different, so make them the same before checking equality.
 		clSvc.Spec.ClusterIP = service.Spec.ClusterIP
@@ -234,46 +286,13 @@ func waitForFederatedServiceShard(cs *release_1_3.Clientset, namespace string, s
 		clSvc.Spec.DeprecatedPublicIPs = service.Spec.DeprecatedPublicIPs
 		clSvc.Spec.LoadBalancerIP = service.Spec.LoadBalancerIP
 		clSvc.Spec.LoadBalancerSourceRanges = service.Spec.LoadBalancerSourceRanges
+		for i := range clSvc.Spec.Ports {
+			clSvc.Spec.Ports[i].NodePort = service.Spec.Ports[i].NodePort
+		}
+
 		Expect(clSvc.Spec).To(Equal(service.Spec))
 	}
-}
 
-func createService(fcs *federation_release_1_3.Clientset, clusterClientSets []*release_1_3.Clientset, namespace string) {
-	By(fmt.Sprintf("Creating federated service %q in namespace %q", FederatedServiceName, namespace))
-
-	labels := map[string]string{
-		"foo": "bar",
-	}
-
-	svc1port := "svc1"
-	svc2port := "svc2"
-
-	service := &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
-			Name: FederatedServiceName,
-		},
-		Spec: v1.ServiceSpec{
-			Selector: labels,
-			Ports: []v1.ServicePort{
-				{
-					Name:       "portname1",
-					Port:       80,
-					TargetPort: intstr.FromString(svc1port),
-				},
-				{
-					Name:       "portname2",
-					Port:       81,
-					TargetPort: intstr.FromString(svc2port),
-				},
-			},
-		},
-	}
-	nservice, err := fcs.Core().Services(namespace).Create(service)
-	framework.Logf("Trying to create service %q in namespace %q", service.ObjectMeta.Name, service.ObjectMeta.Namespace)
-	Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("creating service %s: %+v", service.Name, err))
-	for _, cs := range clusterClientSets {
-		waitForFederatedServiceShard(cs, namespace, nservice, 1)
-	}
 }
 
 func podExitCodeDetector(f *framework.Framework, name string, code int32) func() error {
