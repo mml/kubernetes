@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/golang/glog"
 	"k8s.io/kubernetes/federation/pkg/dnsprovider"
 	"k8s.io/kubernetes/federation/pkg/dnsprovider/rrstype"
 )
@@ -254,6 +255,7 @@ func (s *ServiceController) ensureDnsRrsets(dnsZoneName, dnsName string, endpoin
 /* ensureDnsRecords ensures (idempotently, and with minimum mutations) that all of the DNS records for a service in a given cluster are correct, given the current state of that service in that cluster.  This should be called every time the state of a service might have changed (either w.r.t. it's loadblancer address, or if the number of healthy backend endpoints for that service transitioned from zero to non-zero (or vice verse).  Only shards of the service which have both a loadbalancer ingress IP address or hostname AND at least one healthy backend endpoint are included in DNS records for that service (at all of zone, region and global levels). All other addresses are removed.  Also, if no shards exist in the zone or region of the cluster, a CNAME reference to the next higher level is ensured to exist.
  */
 func (s *ServiceController) ensureDnsRecords(clusterName string, cachedService *cachedService) error {
+	glog.Warning("ENTERING ensureDnsRecords")
 	// Quinton: Pseudocode....
 	// See https://github.com/kubernetes/kubernetes/pull/25107#issuecomment-218026648
 	// For each service we need the following DNS names:
@@ -272,29 +274,36 @@ func (s *ServiceController) ensureDnsRecords(clusterName string, cachedService *
 	// So this time around we only need to patch that (add new records, remove deleted records, and update changed records.
 	//
 	if s == nil {
+		glog.Infof("s is nil")
 		return fmt.Errorf("nil ServiceController passed to ServiceController.ensureDnsRecords(clusterName: %s, cachedService: %v)", clusterName, cachedService)
 	}
 	if s.dns == nil {
+		glog.Infof("s.dns is nil")
 		return nil
 	}
 	if cachedService == nil {
+		glog.Infof("cachedService is nil")
 		return fmt.Errorf("nil cachedService passed to ServiceController.ensureDnsRecords(clusterName: %s, cachedService: %v)", clusterName, cachedService)
 	}
 	serviceName := cachedService.lastState.Name
 	namespaceName := cachedService.lastState.Namespace
 	zoneNames, regionName, err := s.getClusterZoneNames(clusterName)
 	if zoneNames == nil {
+		glog.Infof("zoneNames is nil")
 		return fmt.Errorf("fail to get cluster zone names")
 	}
 	if err != nil {
+		glog.Infof("Error from getClusterZoneNames: %v", err)
 		return err
 	}
 	dnsZoneName, err := s.getFederationDNSZoneName()
 	if err != nil {
+		glog.Infof("Error from getFederationDNSZoneName: %v", err)
 		return err
 	}
 	zoneEndpoints, regionEndpoints, globalEndpoints, err := s.getHealthyEndpoints(clusterName, cachedService)
 	if err != nil {
+		glog.Infof("Error from getHealthyEndpoints: %v", err)
 		return err
 	}
 	_, endpointReachable := cachedService.endpointMap[clusterName]
@@ -310,6 +319,7 @@ func (s *ServiceController) ensureDnsRecords(clusterName string, cachedService *
 	endpoints := [][]string{zoneEndpoints, regionEndpoints, globalEndpoints}
 
 	for i, endpoint := range endpoints {
+		glog.Infof("Working on name #%d %q with endpoints %q", i, dnsNames[i], endpoint)
 		if err = s.ensureDnsRrsets(dnsZoneName, dnsNames[i], endpoint, dnsNames[i+1], endpointReachable); err != nil {
 			return err
 		}
