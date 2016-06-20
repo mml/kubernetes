@@ -235,10 +235,14 @@ var _ = framework.KubeDescribe("[Feature:Federation] Federated Services", func()
 				for _, name := range svcDNSNames {
 					discoverService(f, name, true)
 				}
+			})
 
-				// TODO(mml): This currently takes 9 minutes.  Consider reducing the
-				// TTL and/or running the pods in parallel.
-				Context("[Slow]", func() {
+			// TODO(mml): This currently takes 9 minutes.  Consider reducing the
+			// TTL and/or running the pods in parallel.
+			Context("[Slow] missing local service", func() {
+				It("should never find DNS entries for a missing local service", func() {
+					framework.SkipUnlessFederated(f.Client)
+
 					localSvcDNSNames := []string{
 						FederatedServiceName,
 						fmt.Sprintf("%s.%s", FederatedServiceName, f.Namespace.Name),
