@@ -89,7 +89,9 @@ func (cc *clusterClientCache) syncService(key, clusterName string, clusterCache 
 
 	if needUpdate {
 		for i := 0; i < clientRetryCount; i++ {
+			glog.V(4).Infof("Try %d for %q/%q", i, clusterName, key)
 			if err := sc.ensureDnsRecords(clusterName, cachedService); err == nil {
+				glog.V(4).Infof("SUCCESS ensuring DNS Records for service %s on cluster %s: %v", key, clusterName, err)
 				break
 			}
 			glog.V(4).Infof("Error ensuring DNS Records for service %s on cluster %s: %v", key, clusterName, err)
