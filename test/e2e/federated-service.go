@@ -149,7 +149,7 @@ var _ = framework.KubeDescribe("[Feature:Federation] Federated Services", func()
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
 						{
-							Name:  "federated-service-discovery-container",
+							Name:  "backend",
 							Image: "gcr.io/google_containers/echoserver:1.4",
 						},
 					},
