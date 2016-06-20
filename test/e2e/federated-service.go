@@ -142,8 +142,9 @@ var _ = framework.KubeDescribe("[Feature:Federation] Federated Services", func()
 
 			pod := &v1.Pod{
 				ObjectMeta: v1.ObjectMeta{
-					Name:   name,
-					Labels: labels,
+					Name:      name,
+					Namespace: namespace,
+					Labels:    labels,
 				},
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
